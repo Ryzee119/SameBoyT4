@@ -254,7 +254,7 @@ static void handle_events(GB_gameboy_t *gb)
 static void gb_audio_callback(GB_gameboy_t *gb, GB_sample_t *sample)
 {
     //FIXME: Untested.
-    static const int32_t BUF_SIZE = 64;
+    static const int32_t BUF_SIZE = 128;
     static int16_t left_buffer[BUF_SIZE];
     static int16_t right_buffer[BUF_SIZE];
     static int16_t buffer_pos = 0;
