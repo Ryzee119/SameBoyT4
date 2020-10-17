@@ -46,4 +46,8 @@ platformio run -e teensy41
 * Setup Visual Studio Code as per the Compile instructions.
 * Hit the program button on the Platform IO toolbar (`→`).
 
-<p align="center"><img src="./images/image1.jpg" alt="image1" width="35%"/>  <img src="./images/image2.jpg" alt="image2" width="35%"/></p> <p align="center"><img src="./images/image3.jpg" alt="image3" width="35%"/>  <img src="./images/image4.gif" alt="image4" width="35%"/></p>
+<p align="center"><img src="./images/image1.jpg" alt="image1" width="35%"/>  <img src="./images/image2.jpg" alt="image2" width="35%"/></p>
+
+<p align="center"><img src="./images/image3.jpg" alt="image3" width="35%"/>  <img src="./images/image4.gif" alt="image4" height="35%"/></p>
+
+<p align="center"><img src="./images/SameBoyT4.jpg" alt="SameBoyT4" width="75%"/></p> 
