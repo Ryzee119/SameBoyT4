@@ -92,6 +92,8 @@ void setup()
 
     //Allocate memory for the audio system
     AudioMemory(16);
+    mixer.gain(0,0.5f);
+    mixer.gain(1,0.5f);
 
     Serial.printf("Setup Emulator\n");
     memset(active_pixel_buffer, 0xFF, sizeof(active_pixel_buffer));
@@ -101,7 +103,7 @@ void setup()
 
     //Setup configuration
     GB_set_rumble_mode(&gameboy, GB_RUMBLE_ALL_GAMES);
-    GB_set_sample_rate(&gameboy, (int)AUDIO_SAMPLE_RATE_EXACT);
+    GB_set_sample_rate(&gameboy, ((int)AUDIO_SAMPLE_RATE_EXACT) * 2);
     GB_set_color_correction_mode(&gameboy, GB_COLOR_CORRECTION_DISABLED);
     GB_set_palette(&gameboy, &GB_PALETTE_MGB);
     GB_set_border_mode(&gameboy, GB_BORDER_NEVER);
@@ -268,10 +270,8 @@ static void gb_audio_callback(GB_gameboy_t *gb, GB_sample_t *sample)
     if (buffer_pos == BUF_SIZE)
     {
         //Get audio buffers
-        if (L == NULL)
-            L = left_channel.getBuffer();
-        if (R == NULL)
-            R = right_channel.getBuffer();
+        L = left_channel.getBuffer();
+        R = right_channel.getBuffer();
 
         //Push data into audio system
         if (L != NULL)
