@@ -11,7 +11,7 @@ extern "C"
 //Hacks to fix. Dont access GB_gameboy_t struct from cpp files!
 #undef __cplusplus
 #include "Core/gb.h"
-void same_boy_setup_memory(GB_gameboy_t *gb, uint8_t *rom, uint32_t rom_size);
+void same_boy_setup_memory(GB_gameboy_t *gb, uint8_t *rom, uint32_t rom_size, uint8_t *ram, uint8_t *vram);
 #define __cplusplus
 }
 
@@ -20,6 +20,8 @@ void same_boy_setup_memory(GB_gameboy_t *gb, uint8_t *rom, uint32_t rom_size);
 GB_gameboy_t gameboy;
 uint32_t active_pixel_buffer[160 * 144];
 EXTMEM uint8_t gb_rom[1024 * 1024 * 2]; //Max size 8MB
+uint8_t gb_ram[0x1000 * 8];
+uint8_t gb_vram[0x2000 * 2];
 //FIXME. Dont really want hardcoded
 #ifndef ROMNAME
 #define ROMNAME "myrom.gbc"
@@ -136,7 +138,7 @@ void setup()
         default: rom_len = 32768UL;
     }
 
-    same_boy_setup_memory(&gameboy, gb_rom, rom_len);
+    same_boy_setup_memory(&gameboy, gb_rom, rom_len, gb_ram, gb_vram);
     read_from_file(ROMNAME, 0, gb_rom, rom_len);
     Serial.printf("GB Name: %.15s\n", &gb_rom[0x0134]);
     Serial.printf("ROM Byte Code: %lu\n", gb_rom[0x0148]);
@@ -148,10 +150,10 @@ void setup()
     Serial.printf("Battery Save Size: %u bytes\n", GB_save_battery_size(&gameboy));
     if (GB_save_battery_size(&gameboy) > 0)
     {
-        uint8_t *gb_ram = (uint8_t *)malloc(GB_save_battery_size(&gameboy));
-        read_from_file(SAVNAME, 0, gb_ram, GB_save_battery_size(&gameboy));
-        GB_load_battery_from_buffer(&gameboy, gb_ram, GB_save_battery_size(&gameboy));
-        free(gb_ram);
+        uint8_t *gb_sram = (uint8_t *)malloc(GB_save_battery_size(&gameboy));
+        read_from_file(SAVNAME, 0, gb_sram, GB_save_battery_size(&gameboy));
+        GB_load_battery_from_buffer(&gameboy, gb_sram, GB_save_battery_size(&gameboy));
+        free(gb_sram);
     }
 
     //Start TFT display and draw static frame
