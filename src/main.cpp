@@ -75,9 +75,6 @@ extern "C" uint32_t set_arm_clock(uint32_t frequency);
 
 void setup()
 {
-    //Setup overclock
-    set_arm_clock(816000000); //816MHz highest without cooling
-
     //Start serial. Wait 3 seconds for user to connect or continue
     while (!Serial && millis() < 3000);
     Serial.begin(115200);
