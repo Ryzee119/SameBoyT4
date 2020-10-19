@@ -75,8 +75,12 @@ extern "C" uint32_t set_arm_clock(uint32_t frequency);
 
 void setup()
 {
-    //Setup overclock
-    set_arm_clock(816000000); //816MHz highest without cooling
+    //OVerride standard PSRAM clock to 132 Mhz
+    //CCM_CBCMR_FLEXSPI2_CLK_SEL[] = {396.0f, 720.0f, 664.62f, 528.0f}
+    CCM_CCGR7 |= CCM_CCGR7_FLEXSPI2(CCM_CCGR_OFF);
+    CCM_CBCMR = (CCM_CBCMR & ~(CCM_CBCMR_FLEXSPI2_PODF_MASK | CCM_CBCMR_FLEXSPI2_CLK_SEL_MASK)) |
+                 CCM_CBCMR_FLEXSPI2_PODF(4) | CCM_CBCMR_FLEXSPI2_CLK_SEL(2); // 664.62/(4+1) = 132 MHz
+    CCM_CCGR7 |= CCM_CCGR7_FLEXSPI2(CCM_CCGR_ON);
 
     //Start serial. Wait 3 seconds for user to connect or continue
     while (!Serial && millis() < 3000);
