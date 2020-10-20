@@ -118,7 +118,7 @@ void setup()
     GB_set_update_input_hint_callback(&gameboy, handle_events);
 
     //Load ROM
-    uint8_t rom_size[256]; uint32_t rom_len = 0;
+    uint8_t rom_size[1] = {0xFF}; uint32_t rom_len = 0;
     //Read ROM size from header (offset 0x148)
     read_from_file(ROMNAME, 0x0148, rom_size, 1);
     switch (rom_size[0])
@@ -132,7 +132,17 @@ void setup()
         case (0x06): rom_len = 2097152UL; break;
         case (0x07): rom_len = 4194304UL; break;
         case (0x08): rom_len = 8388608UL; break;
-        default: rom_len = 32768UL;
+        default: rom_len = 0;
+    }
+
+    if (rom_len == 0)
+    {
+        while(1)
+        {
+            Serial.printf("Error reading %s\n", ROMNAME);
+            yield();
+            delay(500);
+        }
     }
 
     same_boy_setup_memory(&gameboy, gb_rom, rom_len, gb_ram, gb_vram);
@@ -343,7 +353,6 @@ static void read_from_file(const char *filename, uint32_t file_offset, uint8_t *
     if (res != FR_OK)
     {
         Serial.printf("[FILEIO] WARNING: Could not open %s for READ\n", filename);
-        memset(data, 0x00, len);
         return;
     }
     if (file_offset > 0)
