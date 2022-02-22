@@ -67,11 +67,8 @@ static uint32_t rgb_encode(GB_gameboy_t *gb, uint8_t r, uint8_t g, uint8_t b);
 static void rumble(GB_gameboy_t *gb, double amp);
 static void handle_events(GB_gameboy_t *gb);
 static void gb_audio_callback(GB_gameboy_t *gb, GB_sample_t *sample);
-
 static void write_to_file(const char *filename, uint8_t *data, uint32_t len);
 static void read_from_file(const char *filename, uint32_t file_offset, uint8_t *data, int32_t len);
-
-extern "C" uint32_t set_arm_clock(uint32_t frequency);
 
 void setup()
 {
