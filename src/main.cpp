@@ -71,7 +71,7 @@ void setup()
 {
     //Start serial. Wait 3 seconds for user to connect or continue
     while (!Serial && millis() < 3000);
-    Serial.begin(115200);
+    Serial.begin(9600);
 
     Serial.printf("Start USB Host\n");
     usbh.begin();
@@ -176,12 +176,12 @@ void loop()
 static void load_boot_rom(GB_gameboy_t *_gb, GB_boot_rom_t type)
 {
     static const char *const names[] = {
-        [GB_BOOT_ROM_DMG0] = "dmg0_boot.bin",
+        [GB_BOOT_ROM_DMG_0] = "dmg0_boot.bin",
         [GB_BOOT_ROM_DMG]  = "dmg_boot.bin",
         [GB_BOOT_ROM_MGB]  = "mgb_boot.bin",
         [GB_BOOT_ROM_SGB]  = "sgb_boot.bin",
         [GB_BOOT_ROM_SGB2] = "sgb2_boot.bin",
-        [GB_BOOT_ROM_CGB0] = "cgb0_boot.bin",
+        [GB_BOOT_ROM_CGB_0] = "cgb0_boot.bin",
         [GB_BOOT_ROM_CGB]  = "cgb_boot.bin",
         [GB_BOOT_ROM_AGB]  = "agb_boot.bin",
     };
@@ -314,7 +314,11 @@ static void read_from_file(const char *filename, uint32_t file_offset, uint8_t *
     if (fil == false)
     {
         Serial.printf("ERROR: Could not open %s for READ\n", filename);
-        while(1) yield();
+        //Who cares about errors for save games
+        if (strcmp(filename, SAVNAME) != 0)
+            while(1) yield();
+        else
+            return;
     }
 
     fil.seekSet(file_offset);
