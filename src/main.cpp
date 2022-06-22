@@ -1,8 +1,8 @@
 #include <Arduino.h>
 #include <Audio.h>
+#include <SD.h>
 #include "ILI9341_t3n.h"
 #include "USBHost_t36.h"
-#include "ff.h"
 #include "frame.h"
 
 extern "C"
@@ -33,12 +33,12 @@ uint8_t gb_vram[0x2000 * 2];
 /* Video (TFT Display) */
 #define ENABLE_TFT_DISPLAY 1
 #define TFT_ROTATION 1 //0-3
-#define TFT_DC 40
-#define TFT_CS 41
+#define TFT_DC 38
+#define TFT_CS 40
 #define TFT_MOSI 26
 #define TFT_SCK 27
 #define TFT_MISO 39
-#define TFT_RST 255
+#define TFT_RST 41
 ILI9341_t3n tft = ILI9341_t3n(TFT_CS, TFT_DC, TFT_RST, TFT_MOSI, TFT_SCK, TFT_MISO);
 DMAMEM uint16_t tft_buffer[320 * 240];
 
@@ -56,9 +56,6 @@ AudioConnection patchCord3(mixer, 0, mqs1, 0);
 USBHost usbh;
 USBHub hub1(usbh);
 JoystickController joy1(usbh);
-
-/* FAT Filesystem */
-FATFS fs;
 
 //Static prototypes
 static void load_boot_rom(GB_gameboy_t *gb, GB_boot_rom_t type);
@@ -80,7 +77,7 @@ void setup()
     usbh.begin();
 
     Serial.printf("Mount SD Card\n");
-    if (f_mount(&fs, "", 1) != FR_OK)
+    if (SD.sdfs.begin(SdioConfig(FIFO_SDIO)) == false)
     {
         Serial.printf("ERROR: Could not mount SD Card\n");
         while (1) yield();
@@ -297,88 +294,35 @@ static void gb_audio_callback(GB_gameboy_t *gb, GB_sample_t *sample)
 
 static void write_to_file(const char *filename, uint8_t *data, uint32_t len)
 {
-    //Trying open the file
-    FRESULT res; UINT br; FIL fil;
-
-    if (fs.fs_type == 0)
-        return;
-
-    res = f_open(&fil, (const TCHAR *)filename, FA_WRITE | FA_CREATE_ALWAYS);
-    if (res != FR_OK)
+    FsFile fil = SD.sdfs.open(filename, O_WRITE | O_CREAT);
+    if (fil == false)
     {
         Serial.printf("ERROR: Could not open %s for WRITE\n", filename);
         while(1) yield();
     }
-    //File opened ok. Write to it.
-    //As the data might coming from memory mapped IO external RAM,
-    //I first buffer to internal RAM.
-    uint8_t buffer[512];
-    uint32_t bytes_written = 0;
-    while (len > 0)
+    if (fil.write(data, len) != len)
     {
-        uint32_t b = (len > sizeof(buffer)) ? sizeof(buffer) : len;
-        memcpy(buffer, data, b);
-        res = f_write(&fil, buffer, b, &br);
-        if (res != FR_OK)
-            break;
-        data += b;
-        len -= b;
-        bytes_written += b;
-    }
-
-    f_close(&fil);
-    if (res != FR_OK)
-    {
-        Serial.printf("ERROR: Could not write %s with error %i\n", filename, res);
+        Serial.printf("ERROR: Could not write to %s\n", filename);
         while(1) yield();
     }
-    else
-    {
-        Serial.printf("Writing %s for %u bytes ok!\n", filename, bytes_written);
-    }
+    fil.close();
 }
 
 static void read_from_file(const char *filename, uint32_t file_offset, uint8_t *data, int32_t len)
 {
-    //Trying open the file
-    FRESULT res; UINT br; FIL fil;
-
-    if (fs.fs_type == 0)
-        return;
-
-    res = f_open(&fil, (const TCHAR *)filename, FA_READ);
-    if (res != FR_OK)
+    FsFile fil = SD.sdfs.open(filename, O_READ);
+    if (fil == false)
     {
-        Serial.printf("[FILEIO] WARNING: Could not open %s for READ\n", filename);
-        return;
-    }
-    if (file_offset > 0)
-        f_lseek(&fil, file_offset);
-
-    //File opened ok. Read from it.
-    //As the data might going to memory mapped IO external RAM,
-    //I first buffer to internal RAM.
-    uint8_t buffer[512];
-    uint32_t bytes_read = 0;
-    while (len > 0)
-    {
-        uint32_t b = (len > (int32_t)sizeof(buffer)) ? sizeof(buffer) : len;
-        res = f_read(&fil, buffer, b, &br);
-        if (res != FR_OK)
-            break;
-        memcpy(data, buffer, b);
-        data += b;
-        len -= b;
-        bytes_read += b;
-    }
-
-    if (res != FR_OK)
-    {
-        Serial.printf("ERROR: Could not read %s with error %i\n", filename, res);
+        Serial.printf("ERROR: Could not open %s for READ\n", filename);
         while(1) yield();
     }
-    else
+
+    fil.seekSet(file_offset);
+
+    if (fil.read(data, len) != (int)len)
     {
-       Serial.printf("Reading %s for %u bytes ok!\n", filename, bytes_read); 
+        Serial.printf("ERROR: Could not read from %s\n", filename);
+        while(1) yield();
     }
+    fil.close();
 }

@@ -2,7 +2,6 @@
 #include_next <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
-#include "ff.h"
 
 static inline int _vscprintf(const char *format, va_list pargs)
 {
